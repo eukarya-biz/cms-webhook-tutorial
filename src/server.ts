@@ -1,4 +1,5 @@
 import express from "express";
+import { notify } from "./notify";
 import type { WebhookEvent } from "./types";
 import { verifySignature } from "./verify";
 
@@ -75,8 +76,10 @@ function handleEvent(event: WebhookEvent) {
     console.log(`Unhandled event type: ${event.type}`);
     return;
   }
-
-  console.log(`[${event.type}] ${event.id}`); // replaced by notify() in 4.4
+  // Errors in notify() must not crash the receiver.
+  notify(event).catch((err) => {
+    console.error(`notify() failed for ${event.id}:`, err);
+  });
 }
 
 // Item events carry the project in data.model; asset events carry it in data itself.
