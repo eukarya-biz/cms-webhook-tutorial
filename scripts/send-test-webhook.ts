@@ -59,7 +59,8 @@ async function main() {
     {
       method: "POST",
       headers: { "Reearth-Signature": `v1,t=${t},${signature}` },
-      body,
+      // Send bytes rather than a string: fetch then adds no Content-Type, just like the CMS.
+      body: Buffer.from(body),
     },
   );
   console.log(`Sent ${values.type} (${values.id}) → ${res.status}`);

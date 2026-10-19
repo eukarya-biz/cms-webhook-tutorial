@@ -31,30 +31,40 @@ const MAX_SEEN = 1000;
 
 // Re:Earth CMS sends no Content-Type header, so read every body as raw bytes.
 // The signature is calculated over these exact bytes.
-app.post("/webhook", express.raw({ type: "*/*", limit: "1mb" }), (req, res) => {
-  const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+// type: () => true reads the body even when there's no Content-Type header.
+// (type: "*/*" would skip it, because it only matches requests that have one.)
+app.post(
+  "/webhook",
+  express.raw({ type: () => true, limit: "1mb" }),
+  (req, res) => {
+    const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
 
-  const result = verifySignature(rawBody, req.get("Reearth-Signature"), secret);
-  if (!result.ok) {
-    console.warn(`Rejected webhook: ${result.reason}`);
-    res.sendStatus(401);
-    return;
-  }
+    const result = verifySignature(
+      rawBody,
+      req.get("Reearth-Signature"),
+      secret,
+    );
+    if (!result.ok) {
+      console.warn(`Rejected webhook: ${result.reason}`);
+      res.sendStatus(401);
+      return;
+    }
 
-  let event: WebhookEvent;
-  try {
-    event = JSON.parse(rawBody.toString("utf8"));
-  } catch {
-    console.warn("Rejected webhook: body is not valid JSON");
-    res.sendStatus(400);
-    return;
-  }
+    let event: WebhookEvent;
+    try {
+      event = JSON.parse(rawBody.toString("utf8"));
+    } catch {
+      console.warn("Rejected webhook: body is not valid JSON");
+      res.sendStatus(400);
+      return;
+    }
 
-  // Reply before doing any work: the CMS waits at most 30 seconds,
-  // and any status above 300 counts as a failed delivery.
-  res.sendStatus(200);
-  handleEvent(event);
-});
+    // Reply before doing any work: the CMS waits at most 30 seconds,
+    // and any status above 300 counts as a failed delivery.
+    res.sendStatus(200);
+    handleEvent(event);
+  },
+);
 
 function handleEvent(event: WebhookEvent) {
   if (seenEventIds.has(event.id)) {
