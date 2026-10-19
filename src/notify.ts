@@ -26,6 +26,8 @@ export function formatEvent(event: WebhookEvent): string {
 
   lines.push(`  by:      ${describeOperator(event.operator)}`);
   lines.push(`  event:   ${event.id}`);
+  // When it reached us; differs from the event time for retried deliveries.
+  lines.push(`  received: ${formatTime(new Date().toISOString())}`);
   return lines.join("\n");
 }
 
