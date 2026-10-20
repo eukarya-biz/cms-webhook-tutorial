@@ -55,7 +55,7 @@ const signature = createHmac("sha256", secret)
 
 async function main() {
   const res = await fetch(
-    `http://localhost:${process.env.PORT ?? 3000}/webhook`,
+    `http://localhost:${Number(process.env.PORT) || 3000}/webhook`,
     {
       method: "POST",
       headers: { "Reearth-Signature": `v1,t=${t},${signature}` },

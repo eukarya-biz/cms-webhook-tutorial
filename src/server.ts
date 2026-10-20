@@ -4,7 +4,7 @@ import type { WebhookEvent } from "./types";
 import { verifySignature } from "./verify";
 
 const app = express();
-const port = Number(process.env.PORT ?? 3000);
+const port = Number(process.env.PORT) || 3000;
 const secret = process.env.CMS_WEBHOOK_SECRET;
 const projectFilter = process.env.CMS_PROJECT_ID || undefined;
 
@@ -58,6 +58,11 @@ app.post(
       res.sendStatus(400);
       return;
     }
+    if (typeof event?.id !== "string" || typeof event?.type !== "string") {
+      console.warn("Rejected webhook: body is missing id or type");
+      res.sendStatus(400);
+      return;
+    }
 
     // Reply before doing any work: the CMS waits at most 30 seconds,
     // and any status above 300 counts as a failed delivery.
@@ -99,6 +104,21 @@ function getProjectId(event: WebhookEvent): string | undefined {
     | undefined;
   return data?.model?.projectId ?? data?.projectId;
 }
+
+// Errors from express.raw() (body too large, bad encoding, aborted request) end up here.
+// Reply with a plain status code: Express's default error page includes a stack
+// trace with local file paths, which anyone with the tunnel URL could see.
+app.use(
+  (
+    err: { status?: number; message?: string },
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    console.warn(`Rejected webhook: ${err.message ?? "invalid request"}`);
+    res.sendStatus(err.status ?? 400);
+  },
+);
 
 app.listen(port, () => {
   console.log(`CMS Webhook Receiver listening on http://localhost:${port}`);
