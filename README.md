@@ -35,12 +35,13 @@ For each request, the server:
 4. Skips duplicate deliveries, events from other projects (if `CMS_PROJECT_ID` is set), and event types it doesn't handle
 5. Calls `notify(event)`, which prints the summary
 
-| File | Purpose |
-|---|---|
-| `src/server.ts` | Express server and `POST /webhook` |
-| `src/verify.ts` | Signature verification |
-| `src/notify.ts` | Event summary — **the extension point** |
-| `src/types.ts` | Payload types, based on real CMS deliveries |
+| File                           | Purpose                                       |
+| ------------------------------ | --------------------------------------------- |
+| `src/server.ts`                | Express server and `POST /webhook`            |
+| `src/verify.ts`                | Signature verification                        |
+| `src/verify.test.ts`           | Tests for signature verification              |
+| `src/notify.ts`                | Event summary — **the extension point**       |
+| `src/types.ts`                 | Payload types, based on real CMS deliveries   |
 | `scripts/send-test-webhook.ts` | Sends a signed test event to the local server |
 
 ## Prerequisites
@@ -80,6 +81,8 @@ The server prints an `[item.create]` summary. Options: `--type <event type>`, `-
 
 `npm run typecheck` checks the TypeScript without running anything.
 
+`npm test` runs the signature-verification tests (no CMS or `.env` needed).
+
 ## Connect to Re:Earth CMS
 
 1. With `npm run dev` running, start a tunnel in another terminal:
@@ -101,11 +104,11 @@ When you stop the tunnel, switch the webhook off. Otherwise every change becomes
 
 ## Environment variables
 
-| Variable | Purpose |
-|---|---|
-| `PORT` | Server port (default `3000`) |
-| `CMS_WEBHOOK_SECRET` | The webhook's Secret, used to verify signatures (required) |
-| `CMS_PROJECT_ID` | Optional. Only handle events from this project; leave empty to accept all |
+| Variable             | Purpose                                                                   |
+| -------------------- | ------------------------------------------------------------------------- |
+| `PORT`               | Server port (default `3000`)                                              |
+| `CMS_WEBHOOK_SECRET` | The webhook's Secret, used to verify signatures (required)                |
+| `CMS_PROJECT_ID`     | Optional. Only handle events from this project; leave empty to accept all |
 
 ## Things to know about CMS webhooks
 
