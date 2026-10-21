@@ -6,6 +6,9 @@ node_modules/
 .env.*
 !.env.example
 
+# Local-only checks (real captured payloads; only verify with your own secret)
+local/
+
 # OS / logs
 .DS_Store
 *.log
